@@ -65,7 +65,8 @@ func (p *SSLCheckRecord) check() {
 		"tcp",
 		fmt.Sprintf("%s:%s", p.Host, p.Port),
 		&tls.Config{
-			ServerName: p.Host,
+			ServerName:         p.Host,
+			InsecureSkipVerify: true,
 		},
 	)
 	if err != nil {
@@ -76,4 +77,8 @@ func (p *SSLCheckRecord) check() {
 
 	state := conn.ConnectionState()
 	p.ExpiresOn = &state.PeerCertificates[0].NotAfter
+
+	if p.ExpiresOn.Before(time.Now()) {
+		p.Error = fmt.Errorf("certificate has expired")
+	}
 }
